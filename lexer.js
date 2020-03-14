@@ -4,6 +4,7 @@ const {
     EOF, ASSIGN, SEMICOLON, LPAREN, RPAREN, ILLEGAL, FUNCTION, LET, IDENT,
     INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ, 
     PLUS, MINUS, EQ, IF, ELSE, TRUE, FALSE, RETURN,
+    STRING,
 } = require('./token_constants')
 
 // const [
@@ -93,6 +94,9 @@ class Lexer{
             case '}':
                 t.setTypeAndLiteral(RBRACE, this.val)
                 break
+            case '"':
+                t.setTypeAndLiteral(STRING, this.readString())
+                break
             case null:                                
                 t.setTypeAndLiteral(EOF, this.val)
                 break
@@ -157,6 +161,17 @@ class Lexer{
         }
         return this.input.slice(p, this.position)
     }
+    readString() {
+        this.read()
+        const startPosition = this.position
+        while(this.val !== null) {            
+            this.read()
+            if(this.val === '"' || this.val === undefined) {
+                break
+            }
+        }                
+        return this.input.slice(startPosition, this.position)
+    }
     skipWhitespace() {
         while (this.val == ' ' || this.val == '\t' || this.val == '\n' || this.val == '\r') {
             this.read()
@@ -185,14 +200,16 @@ function main() {
 
         10 == 10;
         10 != 9;
+        "foobar"; 
+        "foo bar";               
         `
     const lexer = new Lexer(text, 0, 1, text[0])
-    for(let i = 0; i < 74; i++) {        
+    for(let i = 0; i < 77; i++) {        
         console.log(lexer.getNextToken())
     }
 }
 
-// main()
+main()
 
 module.exports = {
     Lexer,
