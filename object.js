@@ -1,8 +1,10 @@
 // 类型信息常量
 const [
     INTEGER_OBJ, BOOLEAN_OBJ,NULL_OBJ, RETURN_VALUE_OBJ, ERROR_OBJ, FUNCTION_OBJ,
+    STRING_OBJ,
 ] = [
         'INTEGER', 'BOOLEAN', 'NULL', 'RETURN_VALUE', 'ERROR', 'FUNCTION',
+        'STRING'
     ]
 
 /**
@@ -42,6 +44,24 @@ class BooleanType extends ObjectType{
     constructor(value) {
         super()
         this.type = BOOLEAN_OBJ
+        this.value = value
+    }
+    inspect() {
+        // 这里要不要返回或者打印什么呢
+        const t = `${this.value}`
+        return t
+    }
+}
+
+/**
+ * Monkey 语言中字符串型的表示
+ * type 是字符串
+ * value 是 js 里面的字符串
+ */
+class StringType extends ObjectType{
+    constructor(value) {
+        super()
+        this.type = STRING_OBJ
         this.value = value
     }
     inspect() {
@@ -163,6 +183,7 @@ class FunctionType extends ObjectType{
 module.exports = {
     IntegerType,
     BooleanType,
+    StringType,
     NullType,
     ReturnValue,
     ErrorType,

@@ -6,6 +6,7 @@ const {
 const {
     IntegerType, BooleanType, NullType, ReturnValue, ErrorType, Environment, FunctionType,
     newEnclosedEnv,
+    StringType,
 } = require('./object')
 
 const { Token } = require('./token')
@@ -46,8 +47,9 @@ function monkeyEval(astNode, env) {
         case 'ExpressionStatement':
             return monkeyEval(astNode.expression, env)
         case 'IntegerLiteral':
-            // console.log('IntegerLiteral 类型', astNode.value)
             return new IntegerType(astNode.value)
+        case 'StringLiteral':
+            return new StringType(astNode.value)
         case 'Boolean':
             return getBoolean(astNode.value)
         case 'Identifier':
@@ -57,9 +59,7 @@ function monkeyEval(astNode, env) {
             return evalIdentifier(astNode, env)
         case 'PrefixExpression':
             right = astNode.right
-            // console.log('right ', right)
             const flatternRight = monkeyEval(right, env)
-            // console.log('flatternRight ', flatternRight.constructor.name)
             if(isError(flatternRight)) {
                 return flatternRight
             }
@@ -191,9 +191,6 @@ function evalBangOperatorExpression(right) {
 }
 
 function evalMinusPrefixOperatorExpression(right) {
-    // console.log('evalMinusPrefixOperatorExpression->right', right.constructor.name, right.value)
-    // const plainRight = monkeyEval(right)
-    // console.log('evalMinusPrefixOperatorExpression->plainRight', plainRight)
     if(right.type !== 'INTEGER') {
         return new ErrorType(`unknown operator: -${right.type}`)
     }
@@ -261,8 +258,7 @@ function evalIfExpression(astNode, env) {
     }
 }
 
-function evalIdentifier(node, env) {
-    // console.log('get-->', env)
+function evalIdentifier(node, env) {    
     const val = env.get(node.value)
     if(val === undefined) {
         return new ErrorType(`identifier not found: ${node.value}`)
@@ -288,8 +284,6 @@ function evalExpressions(args, env) {
 }
 
 function applyFunction(fn, args) {
-    // TODO。类型检查
-    // console.log('apply ', fn, fn.type())
     if(fn.type() !== 'FUNCTION') {
         return new ErrorType(`not a function: ${fn.Type()}`)
     }
@@ -343,8 +337,7 @@ function main() {
     // console.log('result ', result)
 
     const text = `
-        let x = 5;
-        x;
+        "Hello World"        
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
@@ -354,7 +347,7 @@ function main() {
     // const stmts = program.statements    
     // const r =  evalStatements(stmts)
     const r = monkeyEval(program, env)
-    console.log('result ', r.type, r.constructor.name)    
+    console.log('result ', r.type, r.constructor.name, r)    
     console.log('env', env)
 }
 
