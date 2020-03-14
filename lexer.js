@@ -209,7 +209,7 @@ function main() {
     }
 }
 
-main()
+// main()
 
 module.exports = {
     Lexer,

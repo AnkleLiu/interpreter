@@ -170,6 +170,30 @@ class IntegerLiteral{
 }
 
 /**
+ * 字符串型
+ * token 是 Token.STRING
+ * value 是 字符串，js 里的字符串
+ */
+class StringLiteral{
+    constructor(token, value) {
+        this.token = token
+        this.value = value
+    }
+    get type() {
+        return this.constructor.name
+    }
+    expressionNode() {
+
+    }
+    tokenLiteral() {
+        return this.token.literal
+    }
+    toString() {
+        return this.token.literal
+    }
+}
+
+/**
  * 布尔型
  * token 是 Token.True 或者 False
  * value 是 js 里面的 true 或者 false
@@ -356,6 +380,7 @@ module.exports = {
     Identifier,
     Boolean,
     IntegerLiteral,
+    StringLiteral,
     PrefixExpression,
     InfixExpression,
     IfExpression,

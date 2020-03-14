@@ -2,12 +2,14 @@ const {
     Program, LetStatement, ReturnStatement, ExpressionStatement, 
     Identifier, IntegerLiteral, PrefixExpression, InfixExpression, 
     Boolean, IfExpression, BlockStatement, FunctionLiteral, CallExpression,
+    StringLiteral,
 }  = require('./ast')
 const { Lexer } = require('./lexer')
 const {
     EOF, ASSIGN, SEMICOLON, LPAREN, RPAREN, ILLEGAL, FUNCTION, LET, IDENT,
     INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ, 
     PLUS, MINUS, EQ, IF, ELSE, TRUE, FALSE, RETURN,
+    STRING,
     _, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL,
 } = require('./token_constants')
 
@@ -49,7 +51,8 @@ class Parser {
         this.registerPrefix(LPAREN, this.parseGroupedExpression)
         this.registerPrefix(RPAREN, this.parseGroupedExpression)
         this.registerPrefix(IF, this.parseIfExpression)
-        this.registerPrefix(FUNCTION, this.parseFunctionLiteral)                
+        this.registerPrefix(FUNCTION, this.parseFunctionLiteral)
+        this.registerPrefix(STRING, this.parseStringLiteral)   
         // 
         this.registerInfix(PLUS, this.parseInfixExpression)
         this.registerInfix(MINUS, this.parseInfixExpression)
@@ -318,6 +321,9 @@ class Parser {
 
         return expression
     }
+    parseStringLiteral() {
+        return new StringLiteral(this.curToken, this.curToken.literal)
+    }
     curTokenIs(tokenType) {        
         return this.curToken.type === tokenType
     }
@@ -365,7 +371,7 @@ class Parser {
 
 function main() {
     const text = `
-        -5
+        "hello world"
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
