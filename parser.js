@@ -371,7 +371,7 @@ class Parser {
 
 function main() {
     const text = `
-        "hello world"
+        len("")
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])

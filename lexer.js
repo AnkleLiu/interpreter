@@ -161,15 +161,14 @@ class Lexer{
         }
         return this.input.slice(p, this.position)
     }
-    readString() {
-        this.read()
-        const startPosition = this.position
+    readString() {        
+        const startPosition = this.position + 1        
         while(this.val !== null) {            
             this.read()
             if(this.val === '"' || this.val === undefined) {
                 break
             }
-        }                
+        }
         return this.input.slice(startPosition, this.position)
     }
     skipWhitespace() {
@@ -201,10 +200,11 @@ function main() {
         10 == 10;
         10 != 9;
         "foobar"; 
-        "foo bar";               
+        "foo bar";     
+        ""          
         `
     const lexer = new Lexer(text, 0, 1, text[0])
-    for(let i = 0; i < 77; i++) {        
+    for(let i = 0; i < 79; i++) {        
         console.log(lexer.getNextToken())
     }
 }

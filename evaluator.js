@@ -5,8 +5,8 @@ const {
 }  = require('./ast')
 const {
     IntegerType, BooleanType, NullType, ReturnValue, ErrorType, Environment, FunctionType,
-    newEnclosedEnv,
-    StringType,
+    newEnclosedEnv, 
+    StringType, BuiltinType,
 } = require('./object')
 
 const { Token } = require('./token')
@@ -31,6 +31,23 @@ const getBoolean = (input) => {
     return FALSE_INSTANCE
 }
 
+const getBuiltins = (fnName) => {    
+    const m = {
+        'len': new BuiltinType('len', function(args) {            
+            if(args.length !== 1) {
+                return new ErrorType(`wrong number of arguments, expected 1, but got ${args.length}`)
+            }
+            const stringLiteral = args[0]
+            const type = stringLiteral.constructor.name
+            if(type === 'StringType') {
+                return new IntegerType(stringLiteral.value.length)
+            }
+            return new ErrorType(`argument to 'len' not supported, got ${type}`)
+        }),
+    }
+    return m[fnName]
+}
+
 /**
  * js 里有 eval 了，不重名
  */
@@ -39,8 +56,6 @@ function monkeyEval(astNode, env) {
     // TODO。null 的构造器是 Identifier，所以多了一层判断
     const type = astNode.constructor.name    
     let left, right, val
-    // console.log('type', type)
-    // console.log('monkeyEval-->env', env)
     switch(type) {        
         case 'Program':
             return evalProgram(astNode.statements, env)
@@ -84,14 +99,11 @@ function monkeyEval(astNode, env) {
                 return val
             }
             return new ReturnValue(val)
-        case 'LetStatement':
-            // console.log('let-->env', env)
+        case 'LetStatement':            
             val = monkeyEval(astNode.value, env)
             if(isError(val)) {
                 return val
-            }
-            // console.log('let ', astNode)
-            // console.log('env', env)
+            }                        
             return env.set(astNode.name.value, val)
         case 'FunctionLiteral':
             const params = astNode.parameters
@@ -270,23 +282,23 @@ function evalIfExpression(astNode, env) {
 }
 
 function evalIdentifier(node, env) {    
-    const val = env.get(node.value)
+    const nodeValue = node.value
+    const builtinFn = getBuiltins(nodeValue)
+    if(builtinFn !== undefined) {
+        return builtinFn
+    }
+    const val = env.get(nodeValue)
     if(val === undefined) {
-        return new ErrorType(`identifier not found: ${node.value}`)
+        return new ErrorType(`identifier not found: ${nodeValue}`)
     }
     return val
 }
 
 function evalExpressions(args, env) {
-    // console.log('evalExpressions')
-    // console.log('args', args)
-    // console.log('env', env)
     const result = []
     for(const exp of args) {
         const evaluated = monkeyEval(exp, env)
-        // console.log('evaluated', evaluated)
         if(isError(evaluated)) {
-            // console.log('错误 ', evaluated)
             return evaluated
         }
         result.push(evaluated)
@@ -295,12 +307,17 @@ function evalExpressions(args, env) {
 }
 
 function applyFunction(fn, args) {
-    if(fn.type() !== 'FUNCTION') {
-        return new ErrorType(`not a function: ${fn.Type()}`)
+    const fnType = fn.type()
+    if(fnType === 'BUILTIN') {
+        return fn.impl.call(this, args)
+    } else if(type === 'FUNCTION') {
+        const extendedEnv = extendFunctionEnv(fn, args)
+        const evaluated = monkeyEval(fn.body, extendedEnv)
+        return unwrapReturnValue(evaluated)
+    } else {
+        return new ErrorType(`not a function: ${fn.type()}`)
+
     }
-    const extendedEnv = extendFunctionEnv(fn, args)
-    const evaluated = monkeyEval(fn.body, extendedEnv)
-    return unwrapReturnValue(evaluated)
 }
 
 function extendFunctionEnv(fn, args) {
