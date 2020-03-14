@@ -206,6 +206,8 @@ function evalInfixExpression(operator, left, right) {
         return new ErrorType(`type mismatch ${left.type} ${operator} ${right.type}`)
     } else if(left.type === 'INTEGER' && right.type === 'INTEGER') {
         return evalIntegerInfixExpression(operator, left, right)
+    } else if(left.type === 'STRING' && right.type === 'STRING') {
+        return evalStringInfixExpression(operator, left, right)
     } else if(operator === '==') {
         const leftVal = left.value
         const rightVal = right.value  
@@ -242,6 +244,15 @@ function evalIntegerInfixExpression(operator, left, right) {
         default:
             return new ErrorType(`unknown operator ${left.type} ${operator} ${right.type}`)        
     }    
+}
+
+function evalStringInfixExpression(operator, left, right) {
+    if(operator !== '+') {
+        return new ErrorType(`unknown operator ${left.type} ${operator} ${right.type}`)        
+    }
+    const leftVal = left.value
+    const rightVal = right.value    
+    return new StringType(leftVal + rightVal)
 }
 
 function evalIfExpression(astNode, env) {    
@@ -337,7 +348,7 @@ function main() {
     // console.log('result ', result)
 
     const text = `
-        "Hello World"        
+        "Hello " + "World"
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
