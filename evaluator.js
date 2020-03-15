@@ -6,7 +6,7 @@ const {
 const {
     IntegerType, BooleanType, NullType, ReturnValue, ErrorType, Environment, FunctionType,
     newEnclosedEnv, 
-    StringType, BuiltinType,
+    StringType, BuiltinType, ArrayType,
 } = require('./object')
 
 const { Token } = require('./token')
@@ -22,7 +22,7 @@ const { Lexer } = require('./lexer')
 
 const TRUE_INSTANCE = new BooleanType(true) 
 const FALSE_INSTANCE = new BooleanType(false) 
-const NULL_INSTANCE = new NullType(null) 
+const NULL_INSTANCE = new NullType(null)
 
 const getBoolean = (input) => {
     if(input) {
@@ -65,6 +65,12 @@ function monkeyEval(astNode, env) {
             return new IntegerType(astNode.value)
         case 'StringLiteral':
             return new StringType(astNode.value)
+        case 'ArrayLiteral':
+            const elements = evalExpressions(astNode.elements, env)
+            if(elements.length === 1 && isError(elements[0])) {
+                return elements[0]
+            }
+            return new ArrayType(elements)
         case 'Boolean':
             return getBoolean(astNode.value)
         case 'Identifier':
@@ -365,7 +371,7 @@ function main() {
     // console.log('result ', result)
 
     const text = `
-        "Hello " + "World"
+        [1, 2 * 2, 3 + 1]
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
@@ -376,6 +382,9 @@ function main() {
     // const r =  evalStatements(stmts)
     const r = monkeyEval(program, env)
     console.log('result ', r.type, r.constructor.name, r)    
+    for(const item of r.elements) {
+        console.log('item ', item)
+    }
     console.log('env', env)
 }
 

@@ -1,10 +1,10 @@
 // 类型信息常量
 const [
     INTEGER_OBJ, BOOLEAN_OBJ,NULL_OBJ, RETURN_VALUE_OBJ, ERROR_OBJ, FUNCTION_OBJ,
-    STRING_OBJ, BUILTIN_OBJ,
+    STRING_OBJ, BUILTIN_OBJ, ARRAY_OBJ,
 ] = [
         'INTEGER', 'BOOLEAN', 'NULL', 'RETURN_VALUE', 'ERROR', 'FUNCTION',
-        'STRING', 'BUILTIN',
+        'STRING', 'BUILTIN', 'ARRAY',
     ]
 
 /**
@@ -139,6 +139,28 @@ class BuiltinType extends ObjectType{
 }
 
 /**
+ * Monkey 数组类型
+ * elements 里的元素都是 ObjectType
+ */
+class ArrayType extends ObjectType{
+    constructor(elements) {
+        super()
+        this.elements = elements        
+    }
+    type() {
+        return ARRAY_OBJ
+    }
+    inspect() {   
+        const elems = []
+        for(const item of this.elements) {
+            elems.push(item)
+        }
+        elems.join(', ')             
+        return `[${elems}]`
+    }    
+}
+
+/**
  * Monkey 环境
  * 就是字典，outer 是上级环境 
  */
@@ -206,6 +228,7 @@ module.exports = {
     ReturnValue,
     ErrorType,
     BuiltinType,
+    ArrayType,
     Environment,
     newEnclosedEnv,
     FunctionType,    
