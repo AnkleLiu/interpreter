@@ -215,6 +215,28 @@ class Boolean{
 }
 
 /**
+ * 数组型
+ * token 是 Token.LBRACKET
+ * elements 是 Expression 类型的数组
+ */
+class ArrayLiteral{
+    constructor(token, elements) {
+        this.token = token
+        this.elements = elements
+    }
+    expressionNode() {
+
+    }
+    tokenLiteral() {
+        return this.token.literal
+    }
+    toString() {
+        const elems = this.elements.join(', ')
+        return `[${elems}]`
+    }
+}
+
+/**
  * 前缀表达式
  * token 是 Token.XXX，可以作为前缀的
  * operator 是 字符串
@@ -381,6 +403,7 @@ module.exports = {
     Boolean,
     IntegerLiteral,
     StringLiteral,
+    ArrayLiteral,
     PrefixExpression,
     InfixExpression,
     IfExpression,

@@ -2,14 +2,14 @@ const {
     Program, LetStatement, ReturnStatement, ExpressionStatement, 
     Identifier, IntegerLiteral, PrefixExpression, InfixExpression, 
     Boolean, IfExpression, BlockStatement, FunctionLiteral, CallExpression,
-    StringLiteral,
+    StringLiteral, ArrayLiteral,
 }  = require('./ast')
 const { Lexer } = require('./lexer')
 const {
     EOF, ASSIGN, SEMICOLON, LPAREN, RPAREN, ILLEGAL, FUNCTION, LET, IDENT,
     INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ, 
     PLUS, MINUS, EQ, IF, ELSE, TRUE, FALSE, RETURN,
-    STRING,
+    STRING, LBRACKET, RBRACKET,
     _, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL,
 } = require('./token_constants')
 
@@ -52,7 +52,8 @@ class Parser {
         this.registerPrefix(RPAREN, this.parseGroupedExpression)
         this.registerPrefix(IF, this.parseIfExpression)
         this.registerPrefix(FUNCTION, this.parseFunctionLiteral)
-        this.registerPrefix(STRING, this.parseStringLiteral)   
+        this.registerPrefix(STRING, this.parseStringLiteral)
+        this.registerPrefix(LBRACKET, this.parseArrayLiteral)
         // 
         this.registerInfix(PLUS, this.parseInfixExpression)
         this.registerInfix(MINUS, this.parseInfixExpression)
@@ -281,7 +282,8 @@ class Parser {
     }
     parseCallExpression(fnexpression) {        
         const exp = new CallExpression(this.curToken, fnexpression)
-        exp.arguments = this.parseCallArguments()
+        // exp.arguments = this.parseCallArguments()
+        exp.arguments = this.parseExpressionList(RPAREN)
         return exp
     }
     parseCallArguments() {
@@ -323,6 +325,33 @@ class Parser {
     }
     parseStringLiteral() {
         return new StringLiteral(this.curToken, this.curToken.literal)
+    }
+    parseArrayLiteral() {
+        const array = new ArrayLiteral(this.curToken)
+        array.elements = this.parseExpressionList(RBRACKET)
+        return array
+    }
+    parseExpressionList(endTokenType) {
+        // Expression 类型的 list
+        const list = []
+        if(this.peekTokenIs(endTokenType)) {
+            this.nextToken()
+            return list
+        }
+        // 
+        this.nextToken()
+        list.push(this.parseExpression(LOWEST))        
+        // 
+        while(this.peekTokenIs(COMMA)) {            
+            this.nextToken()
+            this.nextToken()            
+            list.push(this.parseExpression(getPrecedence(LOWEST)))
+        }        
+        // 
+        if(!this.expectPeek(endTokenType)) {
+            return null
+        }
+        return list
     }
     curTokenIs(tokenType) {        
         return this.curToken.type === tokenType
@@ -371,14 +400,14 @@ class Parser {
 
 function main() {
     const text = `
-        len("")
+        [1, 2 * 2, 3+3]
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
     const program = parser.parseProgram()
     const stmts = program.statements    
     for(const p of stmts) {        
-        console.log(p)
+        console.log(p.toString())
     }
     console.log(`errors: ${parser.errors}`)
     console.log('finished')
@@ -388,4 +417,4 @@ module.exports = {
     Parser,
 }
 
-// main()
+main()
