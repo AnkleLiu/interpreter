@@ -71,6 +71,16 @@ function monkeyEval(astNode, env) {
                 return elements[0]
             }
             return new ArrayType(elements)
+        case 'IndexExpression':
+            left = monkeyEval(astNode.left, env)
+            if(isError(left)) {
+                return left
+            }
+            const index = monkeyEval(astNode.index, env)
+            if(isError(index)) {
+                return index
+            }
+            return evalIndexExpression(left, index)
         case 'Boolean':
             return getBoolean(astNode.value)
         case 'Identifier':
@@ -273,6 +283,22 @@ function evalStringInfixExpression(operator, left, right) {
     return new StringType(leftVal + rightVal)
 }
 
+function evalIndexExpression(left, index) {    
+    if(left.type() === 'ARRAY' && index.type === 'INTEGER') {
+        return evalArrayIndexExpression(left, index)
+    }
+    return new ErrorType(`index operator not supported: ${left.type}`)
+}
+
+function evalArrayIndexExpression(array, index) {
+    const elements = array.elements
+    const indexValue = index.value
+    if(indexValue < 0 || indexValue > elements.length - 1) {        
+        return new NullType()
+    }
+    return elements[indexValue]
+}
+
 function evalIfExpression(astNode, env) {    
     const condition = monkeyEval(astNode.condition, env)
     if(isError(condition)) {
@@ -371,7 +397,7 @@ function main() {
     // console.log('result ', result)
 
     const text = `
-        [1, 2 * 2, 3 + 1]
+        [1, 2 * 2, 3 + 1][9]
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
@@ -382,9 +408,9 @@ function main() {
     // const r =  evalStatements(stmts)
     const r = monkeyEval(program, env)
     console.log('result ', r.type, r.constructor.name, r)    
-    for(const item of r.elements) {
-        console.log('item ', item)
-    }
+    // for(const item of r.elements) {
+    //     console.log('item ', item)
+    // }
     console.log('env', env)
 }
 
