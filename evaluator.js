@@ -41,9 +41,63 @@ const getBuiltins = (fnName) => {
             const type = stringLiteral.constructor.name
             if(type === 'StringType') {
                 return new IntegerType(stringLiteral.value.length)
+            } else if(type === 'ArrayType') {
+                return new IntegerType(stringLiteral.elements.length)
             }
             return new ErrorType(`argument to 'len' not supported, got ${type}`)
         }),
+        'first': new BuiltinType('first', function(args) {
+            if(args.length !== 1) {
+                return new ErrorType(`wrong number of arguments, expected 1, but got ${args.length}`)
+            }            
+            if(args[0].type !== 'ARRAY') {
+                return new ErrorType(`argument to first must be ARRAY, but got ${args[0].type}`)
+            }
+            const arr = args[0]
+            if(arr.elements.length > 0) {
+                return arr.elements[0]
+            }
+            return new NullType()
+        }),
+        'last': new BuiltinType('last', function(args) {
+            if(args.length !== 1) {
+                return new ErrorType(`wrong number of arguments, expected 1, but got ${args.length}`)
+            }
+            if(args[0].type !== 'ARRAY') {
+                return new ErrorType(`argument to first must be ARRAY, but got ${args[0].type}`)
+            }
+            const elements = args[0].elements
+            const length = elements.length
+            if(length > 0) {
+                return elements[length - 1]
+            }
+            return new NullType()
+        }),
+        'rest': new BuiltinType('rest', function(args) {
+            if(args.length !== 1) {
+                return new ErrorType(`wrong number of arguments, expected 1, but got ${args.length}`)
+            }
+            if(args[0].type !== 'ARRAY') {
+                return new ErrorType(`argument to first must be ARRAY, but got ${args[0].type}`)
+            }
+            const elements = args[0].elements
+            const length = elements.length
+            if(length > 0) {
+                const restElements = elements.slice(1)
+                return new ArrayType(restElements)
+            }
+            return new NullType()
+        }),
+        'push': new BuiltinType('push', function(args) {
+            if(args.length !== 2) {
+                return new ErrorType(`wrong number of arguments, expected 2, but got ${args.length}`)
+            }
+            if(args[0].type !== 'ARRAY') {
+                return new ErrorType(`argument to first must be ARRAY, but got ${args[0].type}`)
+            }                        
+            args[0].elements.push(args[1])
+            return args[0]
+        }),           
     }
     return m[fnName]
 }

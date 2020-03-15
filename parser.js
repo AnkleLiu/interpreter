@@ -284,8 +284,8 @@ class Parser {
     }
     parseCallExpression(fnexpression) {        
         const exp = new CallExpression(this.curToken, fnexpression)
-        // exp.arguments = this.parseCallArguments()
-        exp.arguments = this.parseExpressionList(RPAREN)
+        exp.arguments = this.parseCallArguments()
+        // exp.arguments = this.parseExpressionList(RPAREN)
         return exp
     }
     parseCallArguments() {
@@ -334,6 +334,7 @@ class Parser {
         return array
     }
     parseExpressionList(endTokenType) {
+        // TODO。这个方法有些，函数嵌套调用不能正确 parse
         // Expression 类型的 list
         const list = []
         if(this.peekTokenIs(endTokenType)) {
@@ -411,8 +412,8 @@ class Parser {
 }
 
 function main() {
-    const text = `        
-        ((a * ([1, 2, 3, 4][(b * c)])) * d)
+    const text = `
+        rest(rest(a))
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])

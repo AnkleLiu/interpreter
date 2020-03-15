@@ -25,8 +25,11 @@ class IntegerType extends ObjectType{
         super()
         this.type = INTEGER_OBJ
         this.value = value
-    }    
-    // type() {
+    }   
+    // set type(typeName) {
+    //     return this.type = typeName
+    // } 
+    // get type() {
     //     return INTEGER_OBJ
     // }
     inspect() {
@@ -145,17 +148,18 @@ class BuiltinType extends ObjectType{
 class ArrayType extends ObjectType{
     constructor(elements) {
         super()
+        this.type = ARRAY_OBJ
         this.elements = elements        
     }
-    type() {
-        return ARRAY_OBJ
-    }
+    // type() {
+    //     return ARRAY_OBJ
+    // }
     inspect() {   
-        const elems = []
-        for(const item of this.elements) {
-            elems.push(item)
+        let elems = []
+        for(const item of this.elements) {            
+            elems.push(item.inspect())
         }
-        elems.join(', ')             
+        elems = elems.join(', ')             
         return `[${elems}]`
     }    
 }
