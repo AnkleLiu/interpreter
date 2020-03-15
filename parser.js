@@ -2,7 +2,7 @@ const {
     Program, LetStatement, ReturnStatement, ExpressionStatement, 
     Identifier, IntegerLiteral, PrefixExpression, InfixExpression, 
     Boolean, IfExpression, BlockStatement, FunctionLiteral, CallExpression,
-    StringLiteral, ArrayLiteral,
+    StringLiteral, ArrayLiteral, IndexExpression,
 }  = require('./ast')
 const { Lexer } = require('./lexer')
 const {
@@ -10,10 +10,10 @@ const {
     INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ, 
     PLUS, MINUS, EQ, IF, ELSE, TRUE, FALSE, RETURN,
     STRING, LBRACKET, RBRACKET,
-    _, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL,
+    _, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX,
 } = require('./token_constants')
 
-const PRECENDENCE_ARRAY = [_, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL,]
+const PRECENDENCE_ARRAY = [_, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX]
 
 const getPrecedence = (operator) => {
     const map = {
@@ -26,7 +26,8 @@ const getPrecedence = (operator) => {
         MINUS: PRECENDENCE_ARRAY.indexOf(SUM),
         SLASH: PRECENDENCE_ARRAY.indexOf(PRODUCT),
         ASTERISK: PRECENDENCE_ARRAY.indexOf(PRODUCT),   
-        LPAREN: PRECENDENCE_ARRAY.indexOf(CALL)     
+        LPAREN: PRECENDENCE_ARRAY.indexOf(CALL),
+        LBRACKET: PRECENDENCE_ARRAY.indexOf(INDEX),     
     }
     return map[operator]
 }
@@ -64,6 +65,7 @@ class Parser {
         this.registerInfix(LT, this.parseInfixExpression)
         this.registerInfix(GT, this.parseInfixExpression)
         this.registerInfix(LPAREN, this.parseCallExpression)
+        this.registerInfix(LBRACKET, this.parseIndexExpression)
     }
     registerPrefix(tokenType, fn) {
         this.prefixParseFns[tokenType] = fn
@@ -353,6 +355,16 @@ class Parser {
         }
         return list
     }
+    parseIndexExpression(leftExp) {
+        const exp = new IndexExpression(this.curToken)
+        exp.left = leftExp
+        this.nextToken()
+        exp.index = this.parseExpression(getPrecedence(LOWEST))
+        if(!this.expectPeek(RBRACKET)) {
+            return null
+        }
+        return exp
+    }
     curTokenIs(tokenType) {        
         return this.curToken.type === tokenType
     }
@@ -399,8 +411,8 @@ class Parser {
 }
 
 function main() {
-    const text = `
-        [1, 2 * 2, 3+3]
+    const text = `        
+        ((a * ([1, 2, 3, 4][(b * c)])) * d)
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])

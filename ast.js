@@ -237,6 +237,30 @@ class ArrayLiteral{
 }
 
 /**
+ * 索引访问数组
+ * token 是 Token.LBRACKET
+ * left 是 Expression 类型
+ * index 是 Expression 类型
+ * eg. [1, 2, 3][2]，myArray[2 + 1]
+ */
+class IndexExpression{
+    constructor(token, left, index) {
+        this.token = token
+        this.left = left
+        this.index = index
+    }
+    expressionNode() {
+
+    }
+    tokenLiteral() {
+        return this.token.literal
+    }
+    toString() {        
+        return `(${this.left.toString()}[${this.index.toString()}]])`
+    }
+}
+
+/**
  * 前缀表达式
  * token 是 Token.XXX，可以作为前缀的
  * operator 是 字符串
@@ -404,6 +428,7 @@ module.exports = {
     IntegerLiteral,
     StringLiteral,
     ArrayLiteral,
+    IndexExpression,
     PrefixExpression,
     InfixExpression,
     IfExpression,
