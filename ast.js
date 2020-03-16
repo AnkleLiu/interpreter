@@ -237,6 +237,33 @@ class ArrayLiteral{
 }
 
 /**
+ * 字典型
+ * token 是 Token.LBRACE
+ * pairs 是 js 的字典，key 和 value 都是 Expression 类型
+ */
+class HashLiteral{
+    constructor(token) {
+        this.token = token
+        this.pairs = {}
+    }
+    expressionNode() {
+
+    }
+    tokenLiteral() {
+        return this.token.literal
+    }
+    toString() {        
+        // const pairs = this.pairs
+        // let t = `{ `
+        // Object.keys(pairs).forEach( item => {
+        //     t += `${item.toString()}: ${pairs[item]},`
+        // } )
+        // return t + ' }'
+        return this.pairs
+    }
+}
+
+/**
  * 索引访问数组
  * token 是 Token.LBRACKET
  * left 是 Expression 类型
@@ -428,6 +455,7 @@ module.exports = {
     IntegerLiteral,
     StringLiteral,
     ArrayLiteral,
+    HashLiteral,
     IndexExpression,
     PrefixExpression,
     InfixExpression,

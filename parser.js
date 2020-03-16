@@ -2,14 +2,14 @@ const {
     Program, LetStatement, ReturnStatement, ExpressionStatement, 
     Identifier, IntegerLiteral, PrefixExpression, InfixExpression, 
     Boolean, IfExpression, BlockStatement, FunctionLiteral, CallExpression,
-    StringLiteral, ArrayLiteral, IndexExpression,
+    StringLiteral, ArrayLiteral, IndexExpression, HashLiteral,
 }  = require('./ast')
 const { Lexer } = require('./lexer')
 const {
     EOF, ASSIGN, SEMICOLON, LPAREN, RPAREN, ILLEGAL, FUNCTION, LET, IDENT,
     INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ, 
     PLUS, MINUS, EQ, IF, ELSE, TRUE, FALSE, RETURN,
-    STRING, LBRACKET, RBRACKET,
+    STRING, LBRACKET, RBRACKET, COLON,
     _, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX,
 } = require('./token_constants')
 
@@ -55,6 +55,7 @@ class Parser {
         this.registerPrefix(FUNCTION, this.parseFunctionLiteral)
         this.registerPrefix(STRING, this.parseStringLiteral)
         this.registerPrefix(LBRACKET, this.parseArrayLiteral)
+        this.registerPrefix(LBRACE, this.parseHashLiteral)
         // 
         this.registerInfix(PLUS, this.parseInfixExpression)
         this.registerInfix(MINUS, this.parseInfixExpression)
@@ -366,6 +367,29 @@ class Parser {
         }
         return exp
     }
+    parseHashLiteral() {
+        const hash = new HashLiteral(this.curToken)
+
+        while(!this.peekTokenIs(RBRACE)) {
+            this.nextToken()
+            let key = this.parseExpression(getPrecedence(LOWEST))
+            if(!this.expectPeek(COLON)) {
+                return null
+            }
+            this.nextToken()
+            let value = this.parseExpression(getPrecedence(LOWEST))
+            hash.pairs[key] = value
+            if(!this.peekTokenIs(RBRACE) && !this.expectPeek(COMMA)) {
+                return null
+            }
+        }
+
+        if(!this.expectPeek(RBRACE)) {
+            return null
+        }
+
+        return hash
+    }
     curTokenIs(tokenType) {        
         return this.curToken.type === tokenType
     }
@@ -413,13 +437,16 @@ class Parser {
 
 function main() {
     const text = `
-        rest(rest(a))
+        {"one": 1, "two": 2, "three": 3}
+        {true: 1, false: 2}
+        {1: 1, 2: 2, 3: 3}
+        {"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
     const program = parser.parseProgram()
     const stmts = program.statements    
-    for(const p of stmts) {        
+    for(const p of stmts) {
         console.log(p.toString())
     }
     console.log(`errors: ${parser.errors}`)
