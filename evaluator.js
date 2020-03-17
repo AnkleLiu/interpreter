@@ -97,7 +97,11 @@ const getBuiltins = (fnName) => {
             }                        
             args[0].elements.push(args[1])
             return args[0]
-        }),           
+        }),     
+        'puts': new BuiltinType('puts', function(args) {
+            console.log(args)
+            return new NullType()
+        }),
     }
     return m[fnName]
 }
