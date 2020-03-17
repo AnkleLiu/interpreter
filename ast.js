@@ -241,10 +241,10 @@ class ArrayLiteral{
  * token 是 Token.LBRACE
  * pairs 是 js 的字典，key 和 value 都是 Expression 类型
  */
-class HashLiteral{
+class HashLiteral {
     constructor(token) {
         this.token = token
-        this.pairs = {}
+        this.pairs = new Map()
     }
     expressionNode() {
 
@@ -253,13 +253,12 @@ class HashLiteral{
         return this.token.literal
     }
     toString() {        
-        // const pairs = this.pairs
-        // let t = `{ `
-        // Object.keys(pairs).forEach( item => {
-        //     t += `${item.toString()}: ${pairs[item]},`
-        // } )
-        // return t + ' }'
-        return this.pairs
+        let t = `{ `        
+        for (let [key, value] of this.pairs) {            
+            const item = `${key}: ${value}, `
+            t += item
+        }
+        return t + ' }'        
     }
 }
 

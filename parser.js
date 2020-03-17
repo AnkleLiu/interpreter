@@ -377,8 +377,8 @@ class Parser {
                 return null
             }
             this.nextToken()
-            let value = this.parseExpression(getPrecedence(LOWEST))
-            hash.pairs[key] = value
+            let value = this.parseExpression(getPrecedence(LOWEST))            
+            hash.pairs.set(key, value)
             if(!this.peekTokenIs(RBRACE) && !this.expectPeek(COMMA)) {
                 return null
             }
