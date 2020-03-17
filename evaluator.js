@@ -339,9 +339,11 @@ function evalStringInfixExpression(operator, left, right) {
     return new StringType(leftVal + rightVal)
 }
 
-function evalIndexExpression(left, index) {    
-    if(left.type() === 'ARRAY' && index.type === 'INTEGER') {
+function evalIndexExpression(left, index) {
+    if(left.type === 'ARRAY' && index.type === 'INTEGER') {
         return evalArrayIndexExpression(left, index)
+    } else if(left.type === 'HASH') {
+        return evalHashIndexExpression(left, index)
     }
     return new ErrorType(`index operator not supported: ${left.type}`)
 }
@@ -355,23 +357,27 @@ function evalArrayIndexExpression(array, index) {
     return elements[indexValue]
 }
 
+function evalHashIndexExpression(hash, index) {
+    if(!(index.type === 'INTEGER') && (index.type === 'BOOLEAN') && (index.type === 'STRING')) {
+        return new ErrorType(`unusable as hash key: ${index.type}`)
+    }
+    const pair = hash.pairs.get(index.value)
+    if(pair === undefined) {        
+        return new NullType()
+    }
+    return pair
+}
+
 function evalHashLiteral(node, env) {
     const pairs = new Map()
     const astPairs = node.pairs
     for(const [keyNode, valueNode] of astPairs.entries()) {
-        console.log('keyNode=', keyNode)
-        console.log('valueNode=', valueNode)
         const keyValue = monkeyEval(keyNode, env)
         if(isError(keyValue)) {
             return keyValue
-        }
-        // const valueNode = astPairs.get(key)
+        }        
         const value = monkeyEval(valueNode, env)
-        const hashKey = keyValue.hashKey()
-        console.log('hashKey ', hashKey)
-        console.log('value ', value)
-        // pairs[hashKey] = new HashPair(key, value)
-        pairs.set(hashKey, new HashPair(keyValue, value))
+        pairs.set(keyValue.value, value)
     }
     const hash = new HashType()
     hash.pairs = pairs
@@ -488,15 +494,7 @@ function main() {
      */
 
     const text = `     
-        let two = "two";        
-        {
-            "one": 10 - 9,
-            two: 1 + 1,
-            "thr" + "ee": 6 / 2,
-            4: 4,
-            true: 5,
-            false: 6
-        } 
+        {"foo": 5}["foo"]
         `
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
@@ -506,14 +504,14 @@ function main() {
     // const stmts = program.statements    
     // const r =  evalStatements(stmts)
     const r = monkeyEval(program, env)
-    console.log('result ', r.type, r.constructor.name, r)    
+    console.log('result ', r)    
     // for(const item of r.elements) {
     //     console.log('item ', item)
     // }
     console.log('env', env)
 }
 
-main()
+// main()
 
 module.exports = {
     monkeyEval,

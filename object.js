@@ -26,8 +26,11 @@ class IntegerType extends ObjectType{
         this.type = INTEGER_OBJ
         this.value = value
     }   
-    hashKey() {
-        return new HashKey(this.type, Number(this.value))
+    getHashKey() {
+        if(this.hashKey === undefined) {
+            this.hashKey = new HashKey(this.type, Number(this.value))
+        }
+        return this.hashKey
     }
     // set type(typeName) {
     //     return this.type = typeName
@@ -52,9 +55,14 @@ class BooleanType extends ObjectType{
         this.type = BOOLEAN_OBJ
         this.value = value
     }
-    hashKey() {
-        const val = this.value === true ? 1 : 0
-        return new HashKey(this.type, val)
+    getHashKey() {
+        // const val = this.value === true ? 1 : 0
+        // return new HashKey(this.type, val)
+        if(this.hashKey === undefined) {
+            const val = this.value === true ? 1 : 0
+            this.hashKey = new HashKey(this.type, val)                
+        }
+        return this.hashKey
     }
     inspect() {
         // 这里要不要返回或者打印什么呢
@@ -74,9 +82,14 @@ class StringType extends ObjectType{
         this.type = STRING_OBJ
         this.value = value
     }
-    hashKey() {
+    getHashKey() {
         // 在书中的示例代码里，用了 byte 函数转换成字节，js 里没有那个问题就不转换了
-        return new HashKey(this.type, this.value)
+        // return new HashKey(this.type, this.value)
+        if(this.hashKey === undefined) {
+            // console.log('hashKey is undefined')
+            this.hashKey = new HashKey(this.type, this.value)            
+        }
+        return this.hashKey
     }
     inspect() {
         // 这里要不要返回或者打印什么呢
@@ -185,6 +198,9 @@ class HashType extends ObjectType {
         super()
         this.type = HASH_OBJ
         this.pairs = new Map()
+    }
+    type() {
+        return this.type
     }
     inspect() {   
         // 这里可能会有问题，pairs[item]，这个 Item 是 HashKey 类型

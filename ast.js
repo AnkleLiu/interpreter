@@ -252,7 +252,7 @@ class HashLiteral {
     tokenLiteral() {
         return this.token.literal
     }
-    toString() {        
+    toString() {
         let t = `{ `        
         for (let [key, value] of this.pairs) {            
             const item = `${key}: ${value}, `
