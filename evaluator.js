@@ -431,7 +431,7 @@ function applyFunction(fn, args) {
     const fnType = fn.type()
     if(fnType === 'BUILTIN') {
         return fn.impl.call(this, args)
-    } else if(type === 'FUNCTION') {
+    } else if(fnType === 'FUNCTION') {
         const extendedEnv = extendFunctionEnv(fn, args)
         const evaluated = monkeyEval(fn.body, extendedEnv)
         return unwrapReturnValue(evaluated)
