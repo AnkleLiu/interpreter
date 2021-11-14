@@ -238,7 +238,7 @@ class Parser {
         if (this.peekTokenIs(ELSE)) {
             // 跳过 else
             this.nextToken()
-            // TODO。这里有问题。处理 else if 的情况不行
+            // 增加处理 else if 的情况不行
             if (this.peekTokenIs(IF)) {
                 // 处理 else if 的情况
                 // console.log('else if 的情况', this.curToken)
