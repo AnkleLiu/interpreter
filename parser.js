@@ -1,13 +1,13 @@
-const { 
-    Program, LetStatement, ReturnStatement, ExpressionStatement, 
-    Identifier, IntegerLiteral, PrefixExpression, InfixExpression, 
+const {
+    Program, LetStatement, ReturnStatement, ExpressionStatement,
+    Identifier, IntegerLiteral, PrefixExpression, InfixExpression,
     Boolean, IfExpression, BlockStatement, FunctionLiteral, CallExpression,
     StringLiteral, ArrayLiteral, IndexExpression, HashLiteral,
-}  = require('./ast')
-const { Lexer } = require('./lexer')
+} = require('./ast')
+const {Lexer} = require('./lexer')
 const {
     EOF, ASSIGN, SEMICOLON, LPAREN, RPAREN, ILLEGAL, FUNCTION, LET, IDENT,
-    INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ, 
+    INT, SLASH, ASTERISK, LT, GT, COMMA, LBRACE, RBRACE, BANG, NOT_EQ,
     PLUS, MINUS, EQ, IF, ELSE, TRUE, FALSE, RETURN,
     STRING, LBRACKET, RBRACKET, COLON,
     _, LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX,
@@ -25,9 +25,9 @@ const getPrecedence = (operator) => {
         PLUS: PRECENDENCE_ARRAY.indexOf(SUM),
         MINUS: PRECENDENCE_ARRAY.indexOf(SUM),
         SLASH: PRECENDENCE_ARRAY.indexOf(PRODUCT),
-        ASTERISK: PRECENDENCE_ARRAY.indexOf(PRODUCT),   
+        ASTERISK: PRECENDENCE_ARRAY.indexOf(PRODUCT),
         LPAREN: PRECENDENCE_ARRAY.indexOf(CALL),
-        LBRACKET: PRECENDENCE_ARRAY.indexOf(INDEX),     
+        LBRACKET: PRECENDENCE_ARRAY.indexOf(INDEX),
     }
     return map[operator]
 }
@@ -68,47 +68,53 @@ class Parser {
         this.registerInfix(LPAREN, this.parseCallExpression)
         this.registerInfix(LBRACKET, this.parseIndexExpression)
     }
+
     registerPrefix(tokenType, fn) {
         this.prefixParseFns[tokenType] = fn
     }
+
     registerInfix(tokenType, fn) {
         this.infixParseFns[tokenType] = fn
     }
+
     nextToken() {
         this.curToken = this.peekToken
         this.peekToken = this.lexer.getNextToken()
     }
+
     parseProgram() {
         const program = new Program([])
-        while(this.curToken.type !== 'EOF') {
+        while (this.curToken.type !== 'EOF') {
             const stmt = this.parseStatement()
-            if(stmt !== null) {
+            if (stmt !== null) {
                 program.appendStatement(stmt)
             }
             this.nextToken()
         }
         return program
     }
+
     parseStatement() {
-        switch(this.curToken.type) {
+        switch (this.curToken.type) {
             case 'LET':
                 return this.parseLetStatement()
             case 'RETURN':
-                    return this.parseReturnStatement()
+                return this.parseReturnStatement()
             default:
                 return this.parseExpressionStatement()
         }
     }
+
     parseLetStatement() {
         const stmt = new LetStatement(this.curToken)
 
-        if(!this.expectPeek('IDENT')) {
+        if (!this.expectPeek('IDENT')) {
             return null
         }
 
         stmt.name = new Identifier(this.curToken, this.curToken.literal)
 
-        if(!this.expectPeek(ASSIGN)) {
+        if (!this.expectPeek(ASSIGN)) {
             return null
         }
 
@@ -117,12 +123,13 @@ class Parser {
         stmt.value = this.parseExpression(getPrecedence(LOWEST))
 
         // 暂时跳过表达式求值
-        if(this.peekTokenIs(SEMICOLON)) {
+        if (this.peekTokenIs(SEMICOLON)) {
             this.nextToken()
         }
 
         return stmt
     }
+
     parseReturnStatement() {
         const stmt = new ReturnStatement(this.curToken)
 
@@ -130,36 +137,38 @@ class Parser {
 
         stmt.returnValue = this.parseExpression(getPrecedence(LOWEST))
 
-        if(this.peekTokenIs(SEMICOLON)) {
+        if (this.peekTokenIs(SEMICOLON)) {
             this.nextToken()
         }
 
         return stmt
-    }    
+    }
+
     parseExpressionStatement() {
         const stmt = new ExpressionStatement(this.curToken)
-        
+
         stmt.expression = this.parseExpression(getPrecedence(LOWEST))
         // 分号是可选的
-        if(this.peekTokenIs(SEMICOLON)) {            
+        if (this.peekTokenIs(SEMICOLON)) {
             this.nextToken()
         }
 
         return stmt
-    }    
-    parseExpression(precedence) {    
-        // console.log('parseExpression precedence&type ', precedence, this.curToken)            
+    }
+
+    parseExpression(precedence) {
+        // console.log('parseExpression precedence&type ', precedence, this.curToken)
         const prefix = this.prefixParseFns[this.curToken.type]
         // console.log('prefix function', prefix)
-        if(prefix === undefined) {
+        if (prefix === undefined) {
             this.noPrefixParseFnError(this.curToken.type)
             return null
         }
         let leftExp = prefix.call(this)
         // console.log('leftExp ', leftExp, 'peekPrecedence ', this.peekPrecedence())
-        while(!this.peekTokenIs(SEMICOLON) && precedence < this.peekPrecedence()) {
+        while (!this.peekTokenIs(SEMICOLON) && precedence < this.peekPrecedence()) {
             const infix = this.infixParseFns[this.peekToken.type]
-            if(infix === undefined) {                
+            if (infix === undefined) {
                 return leftExp
             }
             this.nextToken()
@@ -170,13 +179,15 @@ class Parser {
         // console.log('最后返回了什么 ', leftExp)
         return leftExp
     }
-    parseIdentifier() {    
+
+    parseIdentifier() {
         return new Identifier(this.curToken, this.curToken.literal)
     }
+
     parseIntegerLiteral() {
         const integerLiteral = new IntegerLiteral(this.curToken)
         const n = Number(this.curToken.literal)
-        if(isNaN(n)) {
+        if (isNaN(n)) {
             const msg = `could not parse ${this.curToken.literal} as integer`
             console.log(msg)
             this.errors.push(msg)
@@ -185,72 +196,91 @@ class Parser {
         integerLiteral.value = n
         return integerLiteral
     }
+
     parseBoolean() {
         return new Boolean(this.curToken, this.curTokenIs(TRUE))
     }
-    parseGroupedExpression() {        
+
+    parseGroupedExpression() {
         this.nextToken()
 
         const exp = this.parseExpression(getPrecedence(LOWEST))
-        
-        if(!this.expectPeek(RPAREN)) {
+
+        if (!this.expectPeek(RPAREN)) {
             return null
         }
 
         return exp
     }
+
     parseIfExpression() {
+        // console.log('进入 parseIf ', this.curToken)
         const expression = new IfExpression(this.curToken)
 
-        if(!this.expectPeek(LPAREN)) {
+        if (!this.expectPeek(LPAREN)) {
+            // console.log('在这里 throw LPAREN', this.curToken)
             return null
         }
 
         this.nextToken()
         expression.condition = this.parseExpression(getPrecedence(LOWEST))
 
-        if(!this.expectPeek(RPAREN)) {
+        if (!this.expectPeek(RPAREN)) {
             return null
         }
 
-        if(!this.expectPeek(LBRACE)) {
+        if (!this.expectPeek(LBRACE)) {
             return null
         }
 
         expression.consequence = this.parseBlockStatement()
-        
-        if(this.peekTokenIs(ELSE)) {
+
+        if (this.peekTokenIs(ELSE)) {
+            // 跳过 else
             this.nextToken()
-            if(!this.expectPeek(LBRACE)) {
-                return null
+            // TODO。这里有问题。处理 else if 的情况不行
+            if (this.peekTokenIs(IF)) {
+                // 处理 else if 的情况
+                // console.log('else if 的情况', this.curToken)
+                // 让 curToken 变成 IF，进入 parseIfExpression 方法需要 curToken 是 IF
+                this.nextToken()
+                // 递归处理下试试
+                expression.alternative = this.parseIfExpression()
+            } else {
+                if (!this.expectPeek(LBRACE)) {
+                    console.log('在这里 throw LBRACE', this.curToken, this.peekToken)
+                    return null
+                }
+                expression.alternative = this.parseBlockStatement()
             }
-            expression.alternative = this.parseBlockStatement()
         }
 
         return expression
     }
+
     parseBlockStatement() {
         const block = new BlockStatement(this.curToken)
         this.nextToken()
-        while(!this.curTokenIs(RBRACE) && !this.curTokenIs(EOF)) {
-            const stmt = this.parseStatement()            
-            if(stmt !== null) {
+        while (!this.curTokenIs(RBRACE) && !this.curTokenIs(EOF)) {
+            const stmt = this.parseStatement()
+            if (stmt !== null) {
                 block.statements.push(stmt)
             }
             this.nextToken()
         }
         return block
     }
+
     parseFunctionLiteral() {
         const fl = new FunctionLiteral(this.curToken)
 
-        if(!this.expectPeek(LPAREN)) {
+        if (!this.expectPeek(LPAREN)) {
             return null
         }
 
         fl.parameters = this.parseFunctionParameters()
 
-        if(!this.expectPeek(LBRACE)) {
+        if (!this.expectPeek(LBRACE)) {
             return null
         }
 
@@ -258,10 +288,11 @@ class Parser {
 
         return fl
     }
+
     parseFunctionParameters() {
         const identifiers = []
 
-        if(this.peekTokenIs(RPAREN)) {
+        if (this.peekTokenIs(RPAREN)) {
             this.nextToken()
             return identifiers
         }
@@ -270,28 +301,30 @@ class Parser {
         const firstParam = new Identifier(this.curToken, this.curToken.literal)
         identifiers.push(firstParam)
 
-        while(this.peekTokenIs(COMMA)) {
+        while (this.peekTokenIs(COMMA)) {
             this.nextToken()
             this.nextToken()
             let param = new Identifier(this.curToken, this.curToken.literal)
             identifiers.push(param)
         }
 
-        if(!this.expectPeek(RPAREN)) {
+        if (!this.expectPeek(RPAREN)) {
             return null
         }
 
         return identifiers
     }
-    parseCallExpression(fnexpression) {        
+
+    parseCallExpression(fnexpression) {
         const exp = new CallExpression(this.curToken, fnexpression)
         exp.arguments = this.parseCallArguments()
         // exp.arguments = this.parseExpressionList(RPAREN)
         return exp
     }
+
     parseCallArguments() {
         const args = []
-        if(this.peekTokenIs(RPAREN)) {
+        if (this.peekTokenIs(RPAREN)) {
             this.nextToken()
             return args
         }
@@ -299,24 +332,26 @@ class Parser {
         this.nextToken()
         args.push(this.parseExpression(getPrecedence(LOWEST)))
 
-        while(this.peekTokenIs(COMMA)) {
+        while (this.peekTokenIs(COMMA)) {
             this.nextToken()
             this.nextToken()
             args.push(this.parseExpression(getPrecedence(LOWEST)))
         }
 
-        if(!this.expectPeek(RPAREN)) {
+        if (!this.expectPeek(RPAREN)) {
             return null
         }
 
         return args
     }
+
     parsePrefixExpression() {
         const expression = new PrefixExpression(this.curToken, this.curToken.literal)
         this.nextToken()
         expression.right = this.parseExpression(PREFIX)
         return expression
     }
+
     parseInfixExpression(left) {
         // console.log('parse infix curToken ', this.curToken)
         const expression = new InfixExpression(this.curToken, left, this.curToken.literal)
@@ -326,79 +361,87 @@ class Parser {
 
         return expression
     }
+
     parseStringLiteral() {
         return new StringLiteral(this.curToken, this.curToken.literal)
     }
+
     parseArrayLiteral() {
         const array = new ArrayLiteral(this.curToken)
         array.elements = this.parseExpressionList(RBRACKET)
         return array
     }
+
     parseExpressionList(endTokenType) {
-        // TODO。这个方法有些，函数嵌套调用不能正确 parse
+        // TODO。这个方法有问题，函数嵌套调用不能正确 parse
         // Expression 类型的 list
         const list = []
-        if(this.peekTokenIs(endTokenType)) {
+        if (this.peekTokenIs(endTokenType)) {
             this.nextToken()
             return list
         }
-        // 
+        //
         this.nextToken()
-        list.push(this.parseExpression(LOWEST))        
+        list.push(this.parseExpression(getPrecedence(LOWEST)))
         // 
-        while(this.peekTokenIs(COMMA)) {            
+        while (this.peekTokenIs(COMMA)) {
             this.nextToken()
-            this.nextToken()            
+            this.nextToken()
             list.push(this.parseExpression(getPrecedence(LOWEST)))
-        }        
+        }
         // 
-        if(!this.expectPeek(endTokenType)) {
+        if (!this.expectPeek(endTokenType)) {
             return null
         }
         return list
     }
+
     parseIndexExpression(leftExp) {
         const exp = new IndexExpression(this.curToken)
         exp.left = leftExp
         this.nextToken()
         exp.index = this.parseExpression(getPrecedence(LOWEST))
-        if(!this.expectPeek(RBRACKET)) {
+        if (!this.expectPeek(RBRACKET)) {
             return null
         }
         return exp
     }
+
     parseHashLiteral() {
         const hash = new HashLiteral(this.curToken)
 
-        while(!this.peekTokenIs(RBRACE)) {
+        while (!this.peekTokenIs(RBRACE)) {
             this.nextToken()
             let key = this.parseExpression(getPrecedence(LOWEST))
-            if(!this.expectPeek(COLON)) {
+            if (!this.expectPeek(COLON)) {
                 return null
             }
             this.nextToken()
-            let value = this.parseExpression(getPrecedence(LOWEST))            
+            let value = this.parseExpression(getPrecedence(LOWEST))
             hash.pairs.set(key, value)
-            if(!this.peekTokenIs(RBRACE) && !this.expectPeek(COMMA)) {
+            if (!this.peekTokenIs(RBRACE) && !this.expectPeek(COMMA)) {
                 return null
             }
         }
 
-        if(!this.expectPeek(RBRACE)) {
+        if (!this.expectPeek(RBRACE)) {
             return null
         }
 
         return hash
     }
-    curTokenIs(tokenType) {        
+
+    curTokenIs(tokenType) {
         return this.curToken.type === tokenType
     }
-    peekTokenIs(tokenType) {        
+
+    peekTokenIs(tokenType) {
         return this.peekToken.type === tokenType
     }
+
     expectPeek(tokenType) {
         // console.log('expect peek', tokenType, ', ', this.peekToken)
-        if(this.peekTokenIs(tokenType)) {
+        if (this.peekTokenIs(tokenType)) {
             this.nextToken()
             return true
         } else {
@@ -406,30 +449,35 @@ class Parser {
             return false
         }
     }
+
     peekError(tokenType) {
         const msg = `expected next token to be ${tokenType}, got ${this.peekToken.type} instead`
         console.log(msg)
         this.errors.push(msg)
     }
+
     noPrefixParseFnError(tokenType) {
         const msg = `no prefix parse function for ${tokenType} found`
         this.errors.push(msg)
         console.log(msg)
     }
+
     peekPrecedence() {
         const p = getPrecedence(this.peekToken.type)
-        if(p !== undefined) {
+        if (p !== undefined) {
             return p
         }
         return LOWEST
     }
+
     curPrecedence() {
         const p = getPrecedence(this.curToken.type)
-        if(p !== undefined) {
+        if (p !== undefined) {
             return p
         }
         return LOWEST
     }
+
     errors() {
         return this.errors
     }
@@ -445,8 +493,8 @@ function main() {
     const lexer = new Lexer(text, 0, 1, text[0])
     const parser = new Parser(lexer, [])
     const program = parser.parseProgram()
-    const stmts = program.statements    
-    for(const p of stmts) {
+    const stmts = program.statements
+    for (const p of stmts) {
         console.log(p.toString())
     }
     console.log(`errors: ${parser.errors}`)
