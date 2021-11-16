@@ -4,12 +4,12 @@ function createMachine(stateMachineDefinition) {
         transition(currentState, event) {
             const currentStateDefinition = stateMachineDefinition[currentState]      // off 对象
             const destinationTransition = currentStateDefinition.transitions[event]  // switch 对象
-            if(!destinationTransition) {
+            if (!destinationTransition) {
                 return
             }
             const destinationState = destinationTransition.target                     // switch.target 
             const destinationStateDefinition = stateMachineDefinition[destinationState] // on 对象
-            
+
             destinationTransition.action()
             currentStateDefinition.actions.onExit()
             destinationStateDefinition.actions.onEnter()

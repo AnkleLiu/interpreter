@@ -1,6 +1,6 @@
-class Interpreter{
+class Interpreter {
     constructor(text) {
         this.text = text
     }
-    
+
 }
